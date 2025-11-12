@@ -64,33 +64,60 @@ function findIntersection(links1, links2) {
 }
 
 // Function to format links back into EVE Online format and batch by character limit
-function formatLinksForExport(links, maxCharsPerBatch = 3900) {
+// NOTE: Game client adds exactly 82 characters of overhead per link (color codes, formatting, etc)
+// Separators do NOT get overhead - they are counted at face value (2 chars)
+// We need to stay under 3900 chars total in-game
+function formatLinksForExport(links, maxInGameChars = 3900) {
+  const OVERHEAD_PER_LINK = 82;
+  const SEPARATOR_LENGTH = 2; // '→ ' is 2 characters (no overhead added by game)
+
   const batches = [];
+  const batchMetadata = [];
   let currentBatch = [];
-  let currentLength = 0;
+  let currentInGameLength = 0;
 
   links.forEach(link => {
     // Format: <a href="showinfo:5//ID">Name</a>
     const formattedLink = `<a href="showinfo:5//${link.id}">${link.name}</a>`;
-    const linkLength = formattedLink.length + 2; // +2 for arrow separator "→ "
+    const linkLength = formattedLink.length;
+    const linkInGameLength = linkLength + OVERHEAD_PER_LINK;
 
-    // If adding this link would exceed the limit, start a new batch
-    if (currentLength + linkLength > maxCharsPerBatch && currentBatch.length > 0) {
-      batches.push(currentBatch.join('→ '));
-      currentBatch = [];
-      currentLength = 0;
+    // Calculate what the in-game length would be if we add this link
+    // Separator does NOT get the 82 char overhead, just its raw 2 chars
+    const separatorInGame = currentBatch.length > 0 ? SEPARATOR_LENGTH : 0;
+    const testInGameLength = currentInGameLength + separatorInGame + linkInGameLength;
+
+    // If adding this link would exceed the in-game limit, start a new batch
+    if (testInGameLength > maxInGameChars && currentBatch.length > 0) {
+      const batchText = currentBatch.join('→ ');
+      batches.push(batchText);
+      batchMetadata.push({
+        text: batchText,
+        rawChars: batchText.length,
+        inGameChars: currentInGameLength,
+        linkCount: currentBatch.length
+      });
+      currentBatch = [formattedLink];
+      currentInGameLength = linkInGameLength;
+    } else {
+      currentBatch.push(formattedLink);
+      currentInGameLength = testInGameLength;
     }
-
-    currentBatch.push(formattedLink);
-    currentLength += linkLength;
   });
 
   // Add the last batch if it has any links
   if (currentBatch.length > 0) {
-    batches.push(currentBatch.join('→ '));
+    const batchText = currentBatch.join('→ ');
+    batches.push(batchText);
+    batchMetadata.push({
+      text: batchText,
+      rawChars: batchText.length,
+      inGameChars: currentInGameLength,
+      linkCount: currentBatch.length
+    });
   }
 
-  return batches;
+  return { batches, metadata: batchMetadata };
 }
 
 // API endpoint to process link intersection
@@ -112,7 +139,7 @@ app.post('/api/intersect', (req, res) => {
     const commonLinks = findIntersection(links1, links2);
 
     // Format common links for export (batched by character limit)
-    const formattedBatches = formatLinksForExport(commonLinks);
+    const { batches: formattedBatches, metadata: batchMetadata } = formatLinksForExport(commonLinks);
 
     // Return results
     res.json({
@@ -120,6 +147,7 @@ app.post('/api/intersect', (req, res) => {
       links2: links2,
       intersection: commonLinks,
       formattedBatches: formattedBatches,
+      batchMetadata: batchMetadata,
       count: {
         input1: links1.length,
         input2: links2.length,

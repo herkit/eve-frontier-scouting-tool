@@ -44,7 +44,17 @@ npm run install-all
 
 ### Running the Application
 
-#### Option 1: Run Both Server and Client Separately
+#### Option 1: Development Mode with Auto-Reload (Recommended)
+
+Run both server and client with automatic reload:
+```bash
+npm run dev
+```
+This will start:
+- Server on http://localhost:3001 (auto-reloads on file changes)
+- React client on http://localhost:3000 (auto-reloads on file changes)
+
+#### Option 2: Run Both Server and Client Separately
 
 1. Start the server (in one terminal):
 ```bash
@@ -58,7 +68,7 @@ npm run client
 ```
 The React app will open in your browser at http://localhost:3000
 
-#### Option 2: Production Build
+#### Option 3: Production Build
 
 1. Build the React app:
 ```bash

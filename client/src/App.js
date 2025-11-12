@@ -140,20 +140,31 @@ function App() {
                   <div className="export-section">
                     <h2>Export Formatted Links</h2>
                     <p className="export-description">
-                      Click to copy batches (max 3900 characters each). {results.count.batches} batch{results.count.batches !== 1 ? 'es' : ''} available.
+                      Click to copy batches (max 3900 in-game characters each). {results.count.batches} batch{results.count.batches !== 1 ? 'es' : ''} available.
                     </p>
                     <div className="batch-buttons">
-                      {results.formattedBatches.map((batch, index) => (
-                        <div key={index} className="batch-item">
-                          <button
-                            className={`btn btn-export ${copiedIndex === index ? 'copied' : ''}`}
-                            onClick={() => handleCopyBatch(batch, index)}
-                          >
-                            {copiedIndex === index ? '✓ Copied!' : `Copy Batch ${index + 1}`}
-                          </button>
-                          <span className="batch-info">{batch.length} chars</span>
-                        </div>
-                      ))}
+                      {results.formattedBatches.map((batch, index) => {
+                        const metadata = results.batchMetadata?.[index];
+                        return (
+                          <div key={index} className="batch-item">
+                            <button
+                              className={`btn btn-export ${copiedIndex === index ? 'copied' : ''}`}
+                              onClick={() => handleCopyBatch(batch, index)}
+                            >
+                              {copiedIndex === index ? '✓ Copied!' : `Copy Batch ${index + 1}`}
+                            </button>
+                            {metadata && (
+                              <div className="batch-info">
+                                <div>{metadata.linkCount} link{metadata.linkCount !== 1 ? 's' : ''}</div>
+                                <div>{metadata.rawChars} chars → {metadata.inGameChars} in-game</div>
+                              </div>
+                            )}
+                            {!metadata && (
+                              <span className="batch-info">{batch.length} chars</span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

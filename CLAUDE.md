@@ -31,10 +31,15 @@ A specialized tool for EVE Frontier scout route data that:
 - Always match/compare by ID, not name
 
 ### Export Requirements
-- Max 3900 characters per batch
+- Max 3900 characters per batch in the game client (with hidden markup)
+- Game client adds exactly 82 characters of overhead per link (color codes, formatting, etc)
+- Separators `→ ` do NOT get overhead - counted at face value (2 chars)
+- Tool calculates precise in-game character count: `(linkCount × 82) + rawChars`
+- Or more explicitly: `sum(linkLength + 82 for each link) + (separatorCount × 2)`
 - Links joined with `→ ` (arrow + space = 2 chars)
 - Format: `<a href="showinfo:5//ID">Name</a>→ <a href="showinfo:5//ID">Name</a>`
 - Must maintain exact format for compatibility with scout tools
+- UI displays both raw character count and expected in-game character count
 
 ### Code Organization
 - Backend: `server/index.js` - All API endpoints and business logic
