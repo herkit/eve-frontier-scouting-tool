@@ -8,6 +8,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [copiedLink, setCopiedLink] = useState(null);
+  const [highlightedLink, setHighlightedLink] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,6 +52,18 @@ function App() {
       await navigator.clipboard.writeText(batchText);
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy to clipboard');
+    }
+  };
+
+  const handleCopyLink = async (text, linkId, type) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedLink(`${linkId}-${type}`);
+      setHighlightedLink(linkId);
+      setTimeout(() => setCopiedLink(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
       alert('Failed to copy to clipboard');
@@ -126,10 +140,29 @@ function App() {
                   <h2>Common Links Found</h2>
                   <ul className="links-list">
                     {results.intersection.map((link, index) => (
-                      <li key={index}>
+                      <li key={index} className={highlightedLink === link.id ? 'highlighted' : ''}>
                         <div className="link-item">
-                          <span className="link-name">{link.name || link.display}</span>
-                          <span className="link-id">ID: {link.id}</span>
+                          <span className="link-name">
+                            {link.name || link.display}
+                            {link.isHot && <span className="hot-indicator" title="Hot system - potentially dangerous">*</span>}
+                          </span>
+                          <div className="link-actions">
+                            <button
+                              className={`btn-copy ${copiedLink === `${link.id}-name` ? 'copied' : ''}`}
+                              onClick={() => handleCopyLink(link.name, link.id, 'name')}
+                              title="Copy system name"
+                            >
+                              {copiedLink === `${link.id}-name` ? '✓' : 'Name'}
+                            </button>
+                            <button
+                              className={`btn-copy ${copiedLink === `${link.id}-full` ? 'copied' : ''}`}
+                              onClick={() => handleCopyLink(`<a href="showinfo:5//${link.id}">${link.name}</a>`, link.id, 'full')}
+                              title="Copy full link"
+                            >
+                              {copiedLink === `${link.id}-full` ? '✓' : 'Link'}
+                            </button>
+                            <span className="link-id">ID: {link.id}</span>
+                          </div>
                         </div>
                       </li>
                     ))}
@@ -184,7 +217,10 @@ function App() {
                     {results.links1.map((link, index) => (
                       <li key={index}>
                         <div className="link-item">
-                          <span className="link-name">{link.name || link.display}</span>
+                          <span className="link-name">
+                            {link.name || link.display}
+                            {link.isHot && <span className="hot-indicator" title="Hot system - potentially dangerous">*</span>}
+                          </span>
                           <span className="link-id">ID: {link.id}</span>
                         </div>
                       </li>
@@ -197,7 +233,10 @@ function App() {
                     {results.links2.map((link, index) => (
                       <li key={index}>
                         <div className="link-item">
-                          <span className="link-name">{link.name || link.display}</span>
+                          <span className="link-name">
+                            {link.name || link.display}
+                            {link.isHot && <span className="hot-indicator" title="Hot system - potentially dangerous">*</span>}
+                          </span>
                           <span className="link-id">ID: {link.id}</span>
                         </div>
                       </li>
