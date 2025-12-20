@@ -23,7 +23,11 @@ function extractLinks(text) {
   let match;
   while ((match = eveLinksRegex.exec(text)) !== null) {
     const id = match[1];
-    const name = match[2];
+    const rawName = match[2];
+
+    // Check if name ends with * (hot system marker)
+    const isHot = rawName.endsWith('*');
+    const name = isHot ? rawName.slice(0, -1) : rawName;
     const linkKey = `${id}:${name}`;
 
     // Avoid duplicates
@@ -33,7 +37,8 @@ function extractLinks(text) {
         id: id,
         name: name,
         full: `showinfo:5//${id}`,
-        display: name
+        display: name,
+        isHot: isHot
       });
     }
   }
